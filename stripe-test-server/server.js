@@ -1,4 +1,3 @@
-// server.js
 const express = require("express");
 const app = express();
 const cors = require("cors");
@@ -18,12 +17,20 @@ const PORT = 4242;
 app.post("/create-payment-intent", async (req, res) => {
   try {
     const { amount, currency } = req.body;
-    // 예: amount=1000 (10.00 USD), currency="usd"
 
+    // Ensure the amount is an integer and currency is valid
+    if (!Number.isInteger(amount) || amount <= 0) {
+      return res.status(400).json({ error: "Invalid amount. Must be a positive integer." });
+    }
+    if (!currency || currency.toLowerCase() !== "vnd") {
+      return res.status(400).json({ error: "Invalid or unsupported currency. Must be 'vnd'." });
+    }
+
+    // Create PaymentIntent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount,
-      currency,
-      automatic_payment_methods: { enabled: true },
+      amount, // Amount in VND (integer, no decimals)
+      currency: currency.toLowerCase(), // "vnd"
+      automatic_payment_methods: { enabled: true }, // Enable default payment methods
     });
 
     res.json({
@@ -35,6 +42,7 @@ app.post("/create-payment-intent", async (req, res) => {
   }
 });
 
+// Start the server
 app.listen(PORT, () => {
   console.log(`✅ Server is running on http://localhost:${PORT}`);
 });
